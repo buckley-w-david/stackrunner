@@ -1,4 +1,4 @@
-# stacksort
+# stackrunner
 
 Inspired by the famous XKCD comic [Ineffective Sorts](https://xkcd.com/1185/).
 
