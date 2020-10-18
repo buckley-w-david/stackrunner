@@ -11,3 +11,7 @@ This is a generalization of my work on [StackSort](https://github.com/buckley-w-
 ## Disclaimer
 
 Please do not actually use this.
+
+## Try it out
+
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/buckley-w-david/stackrunner/master)
