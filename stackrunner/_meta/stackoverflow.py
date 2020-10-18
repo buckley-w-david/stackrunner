@@ -6,7 +6,15 @@ from stackapi import StackAPI
 
 from stackrunner._meta import config
 
-StackOverflowApi = StackAPI('stackoverflow')
+
+'''
+Pass this as key when making requests against the Stack Exchange API to receive a higher request quota.
+
+This is not considered a secret, and may be safely embed in client side code or distributed binaries.
+'''
+APP_KEY='i1jWtawQVUugZZgFSlTlTg(('
+
+StackOverflowApi = StackAPI('stackoverflow', key=APP_KEY)
 StackOverflowApi.page_size = 50
 StackOverflowApi.max_pages = 1
 

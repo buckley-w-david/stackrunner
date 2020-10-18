@@ -1,4 +1,8 @@
 import ast, _ast
+import copy
+import functools
+import types
+
 from stackrunner._meta import errors
 
 def entrypoints(tree: _ast.Module, signature):
@@ -8,11 +12,14 @@ def entrypoints(tree: _ast.Module, signature):
         if isinstance(f, _ast.FunctionDef) and signature.compatable(f)
     ]
 
-import copy
-import types
-import functools
-
 # https://stackoverflow.com/a/49077211
+'''
+This function returns a copy of a given function, but with
+it's __globals__ switched out.
+
+This is used so that we can exec the compiled module without polluting the global scope
+while allowing references to still be accessed from within the defined functions
+'''
 def copy_func(f, globals=None, module=None):
     """Based on https://stackoverflow.com/a/13503277/2988730 (@unutbu)"""
     if globals is None:
@@ -56,8 +63,6 @@ class CodeBlockRunner:
     def __call__(self, *args, **kwargs):
         if self.working_entrypoint:
             return self.working_entrypoint(*args, **kwargs)
-
-        import pdb; pdb.set_trace()
 
         sig = self._config.signature
 

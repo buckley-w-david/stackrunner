@@ -20,14 +20,12 @@ search_config = stackrunner.RunnerConfig(
 stackrunner.init(sort_config)
 stackrunner.init(search_config)
 
-from random import shuffle
-
 from functools import total_ordering
 @total_ordering
 class DataNode:
     def __init__(self, value):
         self.value = value
-        self.other_data = hash(value)
+        self.other_data = id(self)
 
     def __lt__(self, other):
         if hasattr(other, "value"):
@@ -39,6 +37,7 @@ class DataNode:
             return self.value == other.value
         return self.value == other
 
+from random import shuffle
 l = [DataNode(i) for i in range(100)]
 shuffle(l)
 
@@ -51,5 +50,6 @@ from stackrunner.search import binary_search
 from stackrunner.sort import quicksort
 
 sorted_list = quicksort(l)
-result = binary_search(sorted_list, 15)
+index = binary_search(sorted_list, 15)
+result = sorted_list[index]
 print(result.value, result.other_data)
