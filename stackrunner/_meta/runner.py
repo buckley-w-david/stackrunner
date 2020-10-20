@@ -7,9 +7,9 @@ from stackrunner._meta import errors
 
 def entrypoints(tree: _ast.Module, signature):
     return [
-        f.name
-        for f in tree.body
-        if isinstance(f, _ast.FunctionDef) and signature.compatable(f)
+        node.name
+        for node in tree.body
+        if signature.compatable(node)
     ]
 
 # https://stackoverflow.com/a/49077211
@@ -32,7 +32,8 @@ def copy_func(f, globals=None, module=None):
     g.__kwdefaults__ = copy.copy(f.__kwdefaults__)
     return g
 
-class ReplaceGlobals(ast.NodeTransformer):
+
+class ReplaceFunctionGlobals(ast.NodeVisitor):
     def __init__(self, globals):
         self.globals = globals
 
@@ -41,7 +42,15 @@ class ReplaceGlobals(ast.NodeTransformer):
             func = self.globals[node.name]
             self.globals[node.name] = copy_func(func, self.globals)
 
-        return node
+class ReplaceClassFunctionGlobals(ast.NodeVisitor):
+    def __init__(self, globals):
+        self.globals = globals
+
+    def visit_ClassDef(self, node):
+        for subnode in node.body:
+            if isinstance(subnode, _ast.FunctionDef):
+                func = getattr(self.globals[node.name], subnode.name)
+                setattr(self.globals[node.name], subnode.name, copy_func(func, self.globals))
 
 class CodeBlockRunner:
     def __init__(self, tree, compiled_module, config):
@@ -57,8 +66,18 @@ class CodeBlockRunner:
 
         # Repalce __globals__ on all functions
         self.combined_scope = {**self.globals, **self.locals}
-        fixer = ReplaceGlobals(self.combined_scope)
-        fixer.visit(tree)
+        class_fixer = ReplaceClassFunctionGlobals(self.combined_scope)
+        function_fixer = ReplaceFunctionGlobals(self.combined_scope)
+        class_fixer.visit(tree)
+
+        function_fixer.visit(
+            # If we leave the class definitions in there
+            # Then when we try to fix the functions we'll error out from
+            # trying to fix the instance methods
+            ast.Module(
+                body=[node for node in tree.body if not isinstance(node, _ast.ClassDef)]
+            )
+        )
 
     def __call__(self, *args, **kwargs):
         if self.working_entrypoint:

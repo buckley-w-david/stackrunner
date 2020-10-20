@@ -24,6 +24,16 @@ class Runner():
         self._working_runner = None
         self._blocks = None
 
+        if not config.compiler:
+            self._compiler = compiler.compile_block
+        else:
+            self._compiler = config.compiler
+
+        if not config.runner:
+            self._runner = runner.CodeBlockRunner
+        else:
+            self._runner = config.runner
+
     def __call__(self, *args, **kwargs):
         if self._working_runner:
             return self._working_runner(*args, **kwargs)
@@ -34,8 +44,8 @@ class Runner():
         for code_block in self._blocks:
             logger.debug('CODE BLOCK\n\n%s\n\n', code_block)
             try:
-                ast, compiled = compiler.compile_block(code_block, self._config)
-                block_runner = runner.CodeBlockRunner(ast, compiled, self._config)
+                ast, compiled = self._compiler(code_block, self._config)
+                block_runner = self._runner(ast, compiled, self._config)
                 rval = block_runner(*args, **kwargs)
                 self._working_runner = block_runner
                 return rval

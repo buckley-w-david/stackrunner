@@ -44,10 +44,12 @@ def parse(code: str) -> ast.Module:
     return tree
 
 def compile_block(code_block, config) -> typing.Tuple[ast.AST, 'code']:
+    if config.parser:
+        parse = config.parser
     try:
         tree = parse(code_block)
-        if not any(isinstance(node, _ast.FunctionDef) for node in tree.body):
-            raise errors.NoValidCodeError("Caller must provide a custom compiler to handle blocks that do not define any functions")
+        if not any(isinstance(node, config.signature.type_) for node in tree.body):
+            raise errors.NoValidCodeError(f"Caller must provide a custom compiler to handle blocks that do not define any {config.signature.type_}")
 
         compiled_code = compile(ast.fix_missing_locations(tree), '<StackOverflow>', 'exec')
     except Exception as exc:
